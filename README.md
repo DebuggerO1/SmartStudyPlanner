@@ -70,7 +70,7 @@ This creates a dist/ folder that can be deployed to Vercel, Netlify, or other st
 
 🌐 Live Demo
 
-🔗 (Add your deployment link here once hosted)
+🔗 https://smart-study-planner-lilac.vercel.app/
 
 
 ## 🧠 Motivation
