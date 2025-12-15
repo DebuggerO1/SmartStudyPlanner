@@ -3,6 +3,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
 
@@ -15,6 +16,8 @@ app.get("/health", (req, res) => {
 
 // auth routes
 app.use("/api/auth", authRoutes);
+
+app.use("/api/tasks", taskRoutes);
 
 // connect database
 connectDB();
