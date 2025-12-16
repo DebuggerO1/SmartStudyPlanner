@@ -4,14 +4,14 @@ import { Task } from '../types/Task';
 
 interface TaskItemProps {
   task: Task;
-  onToggleComplete: (id: string) => void;
+  onToggleComplete: (_id: string) => void;
   onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
+  onDelete: (_id: string) => void;
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEdit, onDelete }) => {
   const isOverdue = !task.completed && task.dueDate && new Date(task.dueDate) < new Date();
-  
+
   const priorityColors = {
     Low: 'border-l-emerald-500 bg-gradient-to-r from-emerald-100/90 to-white/95 dark:bg-green-900/20',
     Medium: 'border-l-amber-500 bg-gradient-to-r from-amber-100/90 to-white/95 dark:bg-yellow-900/20',
@@ -24,11 +24,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
     High: 'bg-rose-100 text-rose-800 dark:bg-red-800 dark:text-red-100'
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
     });
@@ -39,7 +39,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
           <button
-            onClick={() => onToggleComplete(task.id)}
+            onClick={() => onToggleComplete(task._id)}
             className={`mt-1 transition-colors ${task.completed ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
           >
             {task.completed ? (
@@ -48,12 +48,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
               <Circle className="h-5 w-5" />
             )}
           </button>
-          
+
           <div className="flex-1 min-w-0">
             <h3 className={`font-medium text-gray-900 dark:text-white ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''}`}>
               {task.name}
             </h3>
-            
+
             <div className="flex flex-wrap items-center gap-4 mt-2">
               {task.dueDate && (
                 <div className={`flex items-center text-sm ${isOverdue ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'}`}>
@@ -63,7 +63,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
                   {isOverdue && <span className="ml-1 font-medium">(Overdue)</span>}
                 </div>
               )}
-              
+
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityBadgeColors[task.priority]}`}>
                 {task.priority} Priority
               </span>
@@ -73,13 +73,16 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
               <div className="flex flex-wrap gap-2 mt-2">
                 {task.tags.map((tag, index) => (
                   <span
-                    key={index}
+                    key={`${task._id}-${index}`}   // ✅ ALWAYS UNIQUE
                     className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100"
                   >
                     <Tag className="h-3 w-3 mr-1" />
                     {tag}
                   </span>
                 ))}
+
+
+
               </div>
             )}
           </div>
@@ -93,7 +96,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
             <Edit3 className="h-4 w-4" />
           </button>
           <button
-            onClick={() => onDelete(task.id)}
+            onClick={() => onDelete(task._id)}
             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
           >
             <Trash2 className="h-4 w-4" />

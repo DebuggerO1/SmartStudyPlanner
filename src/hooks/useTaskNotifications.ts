@@ -7,86 +7,92 @@ interface UseTaskNotificationsProps {
 }
 
 export function useTaskNotifications({ tasks, addNotification }: UseTaskNotificationsProps) {
-  // Check for overdue tasks
+
+  // 🔴 Overdue tasks check (ONLY ONCE per task)
   const checkOverdueTasks = useCallback(() => {
     const now = new Date();
+
     const overdueTasks = tasks.filter(task => {
       if (task.completed || !task.dueDate) return false;
-      const dueDate = new Date(task.dueDate);
-      return dueDate < now;
+      return new Date(task.dueDate) < now;
     });
 
-    // Get previously notified overdue tasks from localStorage
-    const notifiedOverdue = JSON.parse(
-      localStorage.getItem('study-planner-notified-overdue') || '[]'
-    ) as string[];
+    const notifiedOverdue = new Set<string>(
+      JSON.parse(localStorage.getItem('study-planner-notified-overdue') || '[]')
+    );
 
-    // Notify about new overdue tasks
     overdueTasks.forEach(task => {
-      if (!notifiedOverdue.includes(task.id)) {
+      if (!notifiedOverdue.has(task._id)) {
         addNotification(`Task "${task.name}" is now overdue!`, 'overdue');
-        notifiedOverdue.push(task.id);
+        notifiedOverdue.add(task._id);
       }
     });
 
-    // Clean up completed or deleted tasks from notified list
-    const currentTaskIds = tasks.map(t => t.id);
-    const cleanedNotified = notifiedOverdue.filter(id => 
-      currentTaskIds.includes(id) && 
-      tasks.find(t => t.id === id && !t.completed)
-    );
+    // Remove tasks that are completed or deleted
+    const validIds = new Set(tasks.filter(t => !t.completed).map(t => t._id));
+    const cleaned = Array.from(notifiedOverdue).filter(id => validIds.has(id));
 
-    // Update localStorage
-    localStorage.setItem('study-planner-notified-overdue', JSON.stringify(cleanedNotified));
+    localStorage.setItem(
+      'study-planner-notified-overdue',
+      JSON.stringify(cleaned)
+    );
   }, [tasks, addNotification]);
 
-  // Check for tasks due soon (within 24 hours)
+  // 🟡 Upcoming tasks (once per day)
   const checkUpcomingTasks = useCallback(() => {
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    
+
     const upcomingTasks = tasks.filter(task => {
       if (task.completed || !task.dueDate) return false;
       const dueDate = new Date(task.dueDate);
       return dueDate > now && dueDate <= tomorrow;
     });
 
-    // Get previously notified upcoming tasks
-    const notifiedUpcoming = JSON.parse(
-      localStorage.getItem('study-planner-notified-upcoming') || '[]'
-    ) as string[];
+    const notifiedUpcoming = new Set<string>(
+      JSON.parse(localStorage.getItem('study-planner-notified-upcoming') || '[]')
+    );
 
-    // Notify about upcoming tasks (once per day)
     const today = now.toDateString();
-    const lastNotificationDate = localStorage.getItem('study-planner-last-upcoming-check');
+    const lastCheck = localStorage.getItem('study-planner-last-upcoming-check');
 
-    if (lastNotificationDate !== today) {
+    if (lastCheck !== today) {
       upcomingTasks.forEach(task => {
-        if (!notifiedUpcoming.includes(task.id)) {
+        if (!notifiedUpcoming.has(task._id)) {
           const dueDate = new Date(task.dueDate!);
-          const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
-          addNotification(`Task "${task.name}" is due in ${hoursUntilDue} hours`, 'reminder');
-          notifiedUpcoming.push(task.id);
+          const hoursUntilDue = Math.ceil(
+            (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+          );
+
+          addNotification(
+            `Task "${task.name}" is due in ${hoursUntilDue} hours`,
+            'reminder'
+          );
+
+          notifiedUpcoming.add(task._id);
         }
       });
 
+      localStorage.setItem(
+        'study-planner-notified-upcoming',
+        JSON.stringify(Array.from(notifiedUpcoming))
+      );
       localStorage.setItem('study-planner-last-upcoming-check', today);
-      localStorage.setItem('study-planner-notified-upcoming', JSON.stringify(notifiedUpcoming));
     }
   }, [tasks, addNotification]);
 
-  // Run checks when tasks change
+  // Run once when tasks change
   useEffect(() => {
     checkOverdueTasks();
     checkUpcomingTasks();
   }, [checkOverdueTasks, checkUpcomingTasks]);
 
-  // Set up periodic checks
+  // Periodic check (every minute)
   useEffect(() => {
     const interval = setInterval(() => {
       checkOverdueTasks();
       checkUpcomingTasks();
-    }, 60000); // Check every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [checkOverdueTasks, checkUpcomingTasks]);

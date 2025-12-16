@@ -30,15 +30,18 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleComplete, onE
         </h3>
       </div>
       
-      {tasks.map(task => (
-        <TaskItem
-          key={task.id}
-          task={task}
-          onToggleComplete={onToggleComplete}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      ))}
+      {tasks
+  .filter(task => task._id)   // ✅ ensure key exists
+  .map(task => (
+    <TaskItem
+      key={task._id || `temp-${task.name}-${task.createdAt}`}
+      task={task}
+      onToggleComplete={onToggleComplete}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+))}
+
     </div>
   );
 };

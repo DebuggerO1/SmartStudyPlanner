@@ -16,23 +16,24 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, editingTask, onCan
     priority: 'Medium'
   });
 
-  useEffect(() => {
-    if (editingTask) {
-      setFormData({
-        name: editingTask.name,
-        dueDate: editingTask.dueDate,
-        tags: editingTask.tags.join(', '),
-        priority: editingTask.priority
-      });
-    } else {
-      setFormData({
-        name: '',
-        dueDate: '',
-        tags: '',
-        priority: 'Medium'
-      });
-    }
-  }, [editingTask]);
+ useEffect(() => {
+  if (editingTask) {
+    setFormData({
+      name: editingTask.name,
+      dueDate: editingTask.dueDate ?? '',
+      tags: editingTask.tags.join(', '),
+      priority: editingTask.priority
+    });
+  } else {
+    setFormData({
+      name: '',
+      dueDate: '',
+      tags: '',
+      priority: 'Medium'
+    });
+  }
+}, [editingTask]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

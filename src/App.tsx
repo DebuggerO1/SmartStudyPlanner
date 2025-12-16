@@ -42,15 +42,23 @@ function App() {
     let filtered = tasks.filter(task => {
       const tagMatch = selectedTag === '' || task.tags.includes(selectedTag);
       
-      let statusMatch = true;
-      if (selectedStatus === 'completed') {
-        statusMatch = task.completed;
-      } else if (selectedStatus === 'pending') {
-        statusMatch = !task.completed;
-      } else if (selectedStatus === 'overdue') {
-        const isOverdue = !task.completed && task.dueDate && new Date(task.dueDate) < new Date();
-        statusMatch = isOverdue;
-      }
+     let statusMatch = true;
+
+if (selectedStatus === 'completed') {
+  statusMatch = task.completed;
+}
+else if (selectedStatus === 'pending') {
+  statusMatch = !task.completed;
+}
+else if (selectedStatus === 'overdue') {
+  if (task.dueDate) {
+    statusMatch =
+      !task.completed &&
+      new Date(task.dueDate) < new Date();
+  } else {
+    statusMatch = false;
+  }
+}
       
       return tagMatch && statusMatch;
     });
@@ -88,7 +96,7 @@ function App() {
 
   const addTask = (taskData: TaskFormData) => {
     const newTask: Task = {
-      id: crypto.randomUUID(),
+      _id: crypto.randomUUID(),
       name: taskData.name,
       dueDate: taskData.dueDate,
       tags: taskData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
@@ -104,7 +112,7 @@ function App() {
     if (!editingTask) return;
 
     setTasks(prev => prev.map(task =>
-      task.id === editingTask.id
+      task._id === editingTask._id
         ? {
             ...task,
             name: taskData.name,
@@ -120,12 +128,12 @@ function App() {
 
   const toggleTaskComplete = (id: string) => {
     setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
+      task._id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
   const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+    setTasks(prev => prev.filter(task => task._id !== id));
   };
 
   const exportTasks = () => {
@@ -141,13 +149,18 @@ function App() {
   };
 
   const requestNotificationPermission = async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        addNotification('Notifications enabled! You\'ll receive reminders for upcoming tasks.', 'info');
-      }
+  if ('Notification' in window && Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+
+    if (permission === 'granted' && !localStorage.getItem('notif-info-shown')) {
+      addNotification(
+        "Notifications enabled! You'll receive reminders for upcoming tasks.",
+        'info'
+      );
+      localStorage.setItem('notif-info-shown', 'true');
     }
-  };
+  }
+};
 
   // Request notification permission on first load
   React.useEffect(() => {

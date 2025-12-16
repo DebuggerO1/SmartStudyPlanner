@@ -1,50 +1,47 @@
-import { useEffect } from 'react';
-import { Task } from '../types/Task';
+import { useState, useCallback, useMemo } from 'react';
+import { AppNotification } from '../types/Notification';
 
-export function useNotifications(tasks: Task[]) {
-  useEffect(() => {
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+export function useNotificationSystem() {
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
-    // Check for tasks due tomorrow
-    const checkDueTasks = () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+  // ✅ Derived state (NO useEffect)
+  const unreadCount = useMemo(
+    () => notifications.filter(n => !n.read).length,
+    [notifications]
+  );
 
-      const tomorrowEnd = new Date(tomorrow);
-      tomorrowEnd.setHours(23, 59, 59, 999);
+  // ✅ Stable function (NO re-creation)
+  const addNotification = useCallback(
+    (message: string, type: 'overdue' | 'reminder' | 'info' = 'info') => {
+      setNotifications(prev => [
+        {
+          id: crypto.randomUUID(),
+          message,
+          type,
+          time: new Date().toLocaleTimeString(),
+          read: false
+        },
+        ...prev
+      ]);
+    },
+    []
+  );
 
-      const dueTasks = tasks.filter(task => {
-        if (task.completed || !task.dueDate) return false;
-        const dueDate = new Date(task.dueDate);
-        return dueDate >= tomorrow && dueDate <= tomorrowEnd;
-      });
+  const markAllRead = useCallback(() => {
+    setNotifications(prev =>
+      prev.map(n => ({ ...n, read: true }))
+    );
+  }, []);
 
-      if (dueTasks.length > 0 && Notification.permission === 'granted') {
-        dueTasks.forEach(task => {
-          new Notification('Study Reminder', {
-            body: `"${task.name}" is due tomorrow!`,
-            icon: '/vite.svg'
-          });
-        });
-      }
-    };
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
 
-    // Check daily at 9 AM
-    const now = new Date();
-    const scheduledTime = new Date();
-    scheduledTime.setHours(9, 0, 0, 0);
-
-    if (now > scheduledTime) {
-      scheduledTime.setDate(scheduledTime.getDate() + 1);
-    }
-
-    const timeUntilScheduled = scheduledTime.getTime() - now.getTime();
-    const timeout = setTimeout(checkDueTasks, timeUntilScheduled);
-
-    return () => clearTimeout(timeout);
-  }, [tasks]);
+  return {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAllRead,
+    clearNotifications
+  };
 }

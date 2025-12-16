@@ -1,7 +1,7 @@
 export interface Task {
-  id: string;
+  _id: string;   // ✅ MongoDB id
   name: string;
-  dueDate: string;
+  dueDate?: string;   // optional (backend may not send)
   tags: string[];
   priority: 'Low' | 'Medium' | 'High';
   completed: boolean;
