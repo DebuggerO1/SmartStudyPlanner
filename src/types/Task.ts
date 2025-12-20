@@ -1,7 +1,8 @@
 export interface Task {
-  _id: string;   // ✅ MongoDB id
-  name: string;
-  dueDate?: string;   // optional (backend may not send)
+  _id: string;                  // MongoDB id
+  title: string;                // ✅ backend aligned
+  description?: string;         // optional
+  dueDate?: string;
   tags: string[];
   priority: 'Low' | 'Medium' | 'High';
   completed: boolean;
@@ -9,7 +10,8 @@ export interface Task {
 }
 
 export interface TaskFormData {
-  name: string;
+  title: string;                // ✅ title
+  description?: string;         // optional
   dueDate: string;
   tags: string;
   priority: 'Low' | 'Medium' | 'High';

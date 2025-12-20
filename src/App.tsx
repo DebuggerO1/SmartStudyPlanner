@@ -1,24 +1,31 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Moon, Sun, GraduationCap } from 'lucide-react';
+
 import { Task, TaskFormData } from './types/Task';
 import { TaskForm } from './components/TaskForm';
 import { TaskList } from './components/TaskList';
 import { ProgressBar } from './components/ProgressBar';
 import { FilterControls } from './components/FilterControls';
 import { NotificationDropdown } from './components/NotificationDropdown';
+
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useNotificationSystem } from './hooks/useNotificationSystem';
 import { useTaskNotifications } from './hooks/useTaskNotifications';
+import toast from 'react-hot-toast';
+
+const API_URL = 'http://localhost:5000/api/tasks';
 
 function App() {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('study-planner-tasks', []);
+  // ---------------- STATE ----------------
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [darkMode, setDarkMode] = useLocalStorage('study-planner-dark-mode', false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
   const [selectedTag, setSelectedTag] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [sortBy, setSortBy] = useState('dueDate');
 
-  // Notification system
+  // ---------------- NOTIFICATIONS ----------------
   const {
     notifications,
     unreadCount,
@@ -27,50 +34,186 @@ function App() {
     clearNotifications
   } = useNotificationSystem();
 
-  // Task-based notifications
   useTaskNotifications({ tasks, addNotification });
 
-  const availableTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    tasks.forEach(task => {
-      task.tags.forEach(tag => tagSet.add(tag));
+  const token = localStorage.getItem('token');
+
+  // ---------------- FETCH TASKS ----------------
+  useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("No token found");
+        setTasks([]); // 👈 IMPORTANT
+        return;
+      }
+
+      const res = await fetch("http://localhost:5000/api/tasks", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        console.error("Fetch failed:", res.status);
+        setTasks([]); // 👈 IMPORTANT
+        return;
+      }
+
+      const data = await res.json();
+
+      // ✅ ENSURE ARRAY
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else {
+        console.error("Invalid tasks data:", data);
+        setTasks([]);
+      }
+
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+      setTasks([]); // 👈 IMPORTANT
+    }
+  };
+
+  fetchTasks();
+}, []);
+
+  // ---------------- CREATE TASK ----------------
+  const addTask = async (taskData: TaskFormData) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login again");
+      return;
+    }
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        title: taskData.title,   // ✅ FIXED
+        dueDate: taskData.dueDate || null,
+        priority: taskData.priority,
+        tags: taskData.tags
+          .split(",")
+          .map(t => t.trim())
+          .filter(Boolean)
+      })
     });
-    return Array.from(tagSet).sort();
+
+    if (!res.ok) throw new Error("Failed");
+
+    const createdTask = await res.json();
+    setTasks(prev => [...prev, createdTask]);
+    toast.success("Task created successfully"); // ✅
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Task create failed");
+  }
+};
+
+  // ---------------- UPDATE TASK ----------------
+  const updateTask = async (data: TaskFormData) => {
+    if (!editingTask || !token) return;
+
+    const res = await fetch(`${API_URL}/${editingTask._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        title: data.title,
+        dueDate: data.dueDate || undefined,
+        priority: data.priority,
+        tags: data.tags.split(',').map(t => t.trim()).filter(Boolean)
+      })
+    });
+
+    const updated = await res.json();
+
+    setTasks(prev =>
+      prev.map(t => (t._id === updated._id ? updated : t))
+    );
+    setEditingTask(null);
+  };
+
+  // ---------------- TOGGLE COMPLETE ----------------
+  const toggleTaskComplete = async (id: string) => {
+    if (!token) return;
+
+    const task = tasks.find(t => t._id === id);
+    if (!task) return;
+
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ completed: !task.completed })
+    });
+
+    const updated = await res.json();
+
+    setTasks(prev =>
+      prev.map(t => (t._id === id ? updated : t))
+    );
+  };
+
+  // ---------------- DELETE TASK ----------------
+  const deleteTask = async (id: string) => {
+    if (!token) return;
+
+    await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    setTasks(prev => prev.filter(t => t._id !== id));
+  };
+
+  // ---------------- FILTER TAGS ----------------
+  const availableTags = useMemo(() => {
+    const set = new Set<string>();
+    tasks.forEach(t => t.tags.forEach(tag => set.add(tag)));
+    return Array.from(set).sort();
   }, [tasks]);
 
+  // ---------------- FILTER + SORT ----------------
   const filteredAndSortedTasks = useMemo(() => {
     let filtered = tasks.filter(task => {
       const tagMatch = selectedTag === '' || task.tags.includes(selectedTag);
-      
-     let statusMatch = true;
 
-if (selectedStatus === 'completed') {
-  statusMatch = task.completed;
-}
-else if (selectedStatus === 'pending') {
-  statusMatch = !task.completed;
-}
-else if (selectedStatus === 'overdue') {
-  if (task.dueDate) {
-    statusMatch =
-      !task.completed &&
-      new Date(task.dueDate) < new Date();
-  } else {
-    statusMatch = false;
-  }
-}
-      
+      let statusMatch = true;
+      if (selectedStatus === 'completed') statusMatch = task.completed;
+      else if (selectedStatus === 'pending') statusMatch = !task.completed;
+      else if (selectedStatus === 'overdue') {
+        statusMatch =
+          !!task.dueDate &&
+          !task.completed &&
+          new Date(task.dueDate) < new Date();
+      }
+
       return tagMatch && statusMatch;
     });
 
-    // Sort tasks
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'priority':
-          const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
-        case 'name':
-          return a.name.localeCompare(b.name);
+        case 'priority': {
+          const order = { High: 3, Medium: 2, Low: 1 };
+          return order[b.priority] - order[a.priority];
+        }
+        case 'title':
+          return a.title.localeCompare(b.title);
         case 'created':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'dueDate':
@@ -85,93 +228,21 @@ else if (selectedStatus === 'overdue') {
     return filtered;
   }, [tasks, selectedTag, selectedStatus, sortBy]);
 
+  // ---------------- STATS ----------------
   const stats = useMemo(() => {
-    const completed = tasks.filter(task => task.completed).length;
-    const overdue = tasks.filter(task => {
-      return !task.completed && task.dueDate && new Date(task.dueDate) < new Date();
-    }).length;
-    
+    const completed = tasks.filter(t => t.completed).length;
+    const overdue = tasks.filter(
+      t => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
+    ).length;
+
     return { completed, total: tasks.length, overdue };
   }, [tasks]);
 
-  const addTask = (taskData: TaskFormData) => {
-    const newTask: Task = {
-      _id: crypto.randomUUID(),
-      name: taskData.name,
-      dueDate: taskData.dueDate,
-      tags: taskData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
-      priority: taskData.priority,
-      completed: false,
-      createdAt: new Date().toISOString()
-    };
-
-    setTasks(prev => [...prev, newTask]);
-  };
-
-  const updateTask = (taskData: TaskFormData) => {
-    if (!editingTask) return;
-
-    setTasks(prev => prev.map(task =>
-      task._id === editingTask._id
-        ? {
-            ...task,
-            name: taskData.name,
-            dueDate: taskData.dueDate,
-            tags: taskData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
-            priority: taskData.priority
-          }
-        : task
-    ));
-
-    setEditingTask(null);
-  };
-
-  const toggleTaskComplete = (id: string) => {
-    setTasks(prev => prev.map(task =>
-      task._id === id ? { ...task, completed: !task.completed } : task
-    ));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task._id !== id));
-  };
-
-  const exportTasks = () => {
-    const dataStr = JSON.stringify(tasks, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `study-planner-tasks-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const requestNotificationPermission = async () => {
-  if ('Notification' in window && Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
-
-    if (permission === 'granted' && !localStorage.getItem('notif-info-shown')) {
-      addNotification(
-        "Notifications enabled! You'll receive reminders for upcoming tasks.",
-        'info'
-      );
-      localStorage.setItem('notif-info-shown', 'true');
-    }
-  }
-};
-
-  // Request notification permission on first load
-  React.useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      requestNotificationPermission();
-    }
-  }, []);
+  // ---------------- UI ----------------
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'}`}>
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'}`}>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
+
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <GraduationCap className="h-8 w-8 text-blue-600 mr-3" />
@@ -180,7 +251,7 @@ else if (selectedStatus === 'overdue') {
               <p className="text-gray-600 dark:text-gray-400">Organize your learning journey</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <NotificationDropdown
               notifications={notifications}
@@ -188,30 +259,20 @@ else if (selectedStatus === 'overdue') {
               onMarkAllRead={markAllRead}
               onClearAll={clearNotifications}
             />
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            <button onClick={() => setDarkMode(!darkMode)}>
+              {darkMode ? <Sun /> : <Moon />}
             </button>
           </div>
         </header>
 
-        {/* Progress Overview */}
-        <ProgressBar
-          completed={stats.completed}
-          total={stats.total}
-          overdue={stats.overdue}
-        />
+        <ProgressBar {...stats} />
 
-        {/* Task Form */}
         <TaskForm
           onSubmit={editingTask ? updateTask : addTask}
           editingTask={editingTask}
           onCancel={() => setEditingTask(null)}
         />
 
-        {/* Filter Controls */}
         <FilterControls
           selectedTag={selectedTag}
           onTagChange={setSelectedTag}
@@ -220,10 +281,9 @@ else if (selectedStatus === 'overdue') {
           sortBy={sortBy}
           onSortChange={setSortBy}
           availableTags={availableTags}
-          onExport={exportTasks}
+          onExport={() => {}}
         />
 
-        {/* Task List */}
         <TaskList
           tasks={filteredAndSortedTasks}
           onToggleComplete={toggleTaskComplete}

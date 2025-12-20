@@ -1,6 +1,12 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
+
+  // ✅ Allow CORS preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

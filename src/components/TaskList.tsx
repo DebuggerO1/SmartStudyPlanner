@@ -34,7 +34,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onToggleComplete, onE
   .filter(task => task._id)   // ✅ ensure key exists
   .map(task => (
     <TaskItem
-      key={task._id || `temp-${task.name}-${task.createdAt}`}
+      key={task._id || `temp-${task.title}-${task.createdAt}`}
       task={task}
       onToggleComplete={onToggleComplete}
       onEdit={onEdit}

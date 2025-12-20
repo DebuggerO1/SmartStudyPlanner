@@ -10,23 +10,26 @@ interface TaskFormProps {
 
 export const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, editingTask, onCancel }) => {
   const [formData, setFormData] = useState<TaskFormData>({
-    name: '',
+    title: '',
     dueDate: '',
+    description: '',
     tags: '',
     priority: 'Medium'
   });
 
  useEffect(() => {
-  if (editingTask) {
-    setFormData({
-      name: editingTask.name,
-      dueDate: editingTask.dueDate ?? '',
-      tags: editingTask.tags.join(', '),
-      priority: editingTask.priority
-    });
+ if (editingTask) {
+  setFormData({
+    title: editingTask.title,
+    description: editingTask.description ?? '',
+    dueDate: editingTask.dueDate ?? '',
+    tags: editingTask.tags.join(', '),
+    priority: editingTask.priority
+  });
   } else {
     setFormData({
-      name: '',
+      title: '',
+      description: '',
       dueDate: '',
       tags: '',
       priority: 'Medium'
@@ -37,13 +40,14 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, editingTask, onCan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    if (!formData.title.trim()) return;
 
     onSubmit(formData);
     
     if (!editingTask) {
       setFormData({
-        name: '',
+        title: '',
+        description: '', 
         dueDate: '',
         tags: '',
         priority: 'Medium'
@@ -81,8 +85,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, editingTask, onCan
           </label>
           <input
             type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             placeholder="e.g., Revise DBMS notes"
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all"
             required
@@ -117,7 +121,6 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, editingTask, onCan
             </select>
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tags

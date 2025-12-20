@@ -51,7 +51,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEd
 
           <div className="flex-1 min-w-0">
             <h3 className={`font-medium text-gray-900 dark:text-white ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : ''}`}>
-              {task.name}
+              {task.title}
             </h3>
 
             <div className="flex flex-wrap items-center gap-4 mt-2">

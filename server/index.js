@@ -1,11 +1,16 @@
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
+
 const connectDB = require("./config/db");
 
-const authRoutes = require("./routes/authRoutes");
-const taskRoutes = require("./routes/taskRoutes");
-
 const app = express();
+
+// ✅ CORS (Express 4 compatible)
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 app.use(express.json());
 
@@ -14,15 +19,12 @@ app.get("/health", (req, res) => {
   res.json({ status: "Backend is running" });
 });
 
-// auth routes
-app.use("/api/auth", authRoutes);
+// routes
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/tasks", require("./routes/taskRoutes"));
 
-app.use("/api/tasks", taskRoutes);
-
-// connect database
 connectDB();
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
 });
