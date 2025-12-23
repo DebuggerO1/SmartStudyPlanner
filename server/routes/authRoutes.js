@@ -1,13 +1,22 @@
 const express = require("express");
-const { signup, login } = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
+
+const {
+  register,
+  login,
+  refreshToken,
+  logout
+} = require("../controllers/authController");
 
 const router = express.Router();
 
-router.post("/signup", signup);
+// ---------- AUTH ROUTES ----------
+router.post("/register", register);
 router.post("/login", login);
+router.post("/refresh", refreshToken);
+router.post("/logout", logout);
 
-// 🔒 protected route
+// ---------- PROTECTED ROUTE ----------
 router.get("/profile", authMiddleware, (req, res) => {
   res.json({
     message: "Access granted",

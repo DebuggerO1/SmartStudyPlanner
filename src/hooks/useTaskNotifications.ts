@@ -23,7 +23,7 @@ export function useTaskNotifications({ tasks, addNotification }: UseTaskNotifica
 
     overdueTasks.forEach(task => {
       if (!notifiedOverdue.has(task._id)) {
-        addNotification(`Task "${task.name}" is now overdue!`, 'overdue');
+        addNotification(`Task "${task.title}" is now overdue!`, 'overdue');
         notifiedOverdue.add(task._id);
       }
     });
@@ -65,7 +65,7 @@ export function useTaskNotifications({ tasks, addNotification }: UseTaskNotifica
           );
 
           addNotification(
-            `Task "${task.name}" is due in ${hoursUntilDue} hours`,
+            `Task "${task.title}" is due in ${hoursUntilDue} hours`,
             'reminder'
           );
 

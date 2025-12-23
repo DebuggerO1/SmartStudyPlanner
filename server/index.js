@@ -1,20 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
 const app = express();
 
-// ✅ CORS (Express 4 compatible)
+/* 🔥 VERY IMPORTANT ORDER */
 app.use(cors({
-  origin: true,
+  origin: "http://localhost:5173", // frontend
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json());      // 👈 MUST be before routes
+app.use(cookieParser());      // 👈 REQUIRED for refreshToken
 
-// health route
+// health check
 app.get("/health", (req, res) => {
   res.json({ status: "Backend is running" });
 });

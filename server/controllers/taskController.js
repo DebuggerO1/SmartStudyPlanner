@@ -5,16 +5,18 @@ const Task = require("../models/Task");
 // ============================
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, dueDate, priority, tags } = req.body;
+    if (!req.body) {
+      return res.status(400).json({ message: "Request body missing" });
+    }
 
-    // ✅ frontend + model aligned
+    const { title, dueDate, priority, tags } = req.body;
+
     if (!title) {
-      return res.status(400).json({ message: "title is required" });
+      return res.status(400).json({ message: "Title is required" });
     }
 
     const task = await Task.create({
       title,
-      description: description || "",
       dueDate,
       priority,
       tags,
@@ -22,8 +24,8 @@ exports.createTask = async (req, res) => {
     });
 
     res.status(201).json(task);
-  } catch (error) {
-    console.error("Create task error:", error);
+  } catch (err) {
+    console.error("Create task error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
