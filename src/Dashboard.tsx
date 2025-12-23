@@ -15,7 +15,7 @@ import { useNotificationSystem } from "./hooks/useNotificationSystem";
 import { useTaskNotifications } from "./hooks/useTaskNotifications";
 import { fetchWithAuth } from "./utils/fetchWithAuth";
 
-const API_URL = "http://localhost:5000/api/tasks";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/tasks`;
 
 function Dashboard() {
     // ---------------- STATE ----------------

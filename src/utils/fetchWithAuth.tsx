@@ -18,8 +18,7 @@ export const fetchWithAuth = async (
 
   // ---------------- REFRESH FLOW ----------------
   if (res.status === 401) {
-    const refreshRes = await fetch(
-      "http://localhost:5000/api/auth/refresh",
+    const refreshRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`,
       {
         method: "POST",
         credentials: "include"
