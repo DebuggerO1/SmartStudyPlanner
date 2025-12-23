@@ -8,7 +8,8 @@ const app = express();
 
 /* 🔥 VERY IMPORTANT ORDER */
 app.use(cors({
-  origin: "http://localhost:5173", // frontend
+  origin:[ "http://localhost:5173", 
+    "https://smart-study-planner-eph5.vercel.app"],// frontend
   credentials: true
 }));
 

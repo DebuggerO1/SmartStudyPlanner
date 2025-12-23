@@ -1,44 +1,120 @@
-# SmartStudyPlanner
+# SmartStudyPlanner 🚀
 
-SmartStudyPlanner is a modern web-based study planner and task management application built with **React**, **Vite**, and **Tailwind CSS**. It helps users organize and manage their study tasks efficiently with features like priority levels, due dates, tags, filtering, notifications, and progress tracking.
+SmartStudyPlanner is a **full-stack study planner and task management web application** built to help students organize their learning efficiently.
 
+It features **secure authentication**, **task management**, **progress tracking**, and a **modern responsive UI**, implemented using **industry-standard full-stack practices**.
 
-## 🚀 Features
+This project is well-suited for **internships, entry-level placements, and portfolio showcasing**.
 
-✔ **Task Management** — Add, edit, and delete tasks with due date, priority, tags, and descriptions  
-✔ **Notifications** — Bell icon alerts users when tasks become overdue  
-✔ **Filters & Sorting** — Filter tasks by status/tag and sort by priority or due date  
-✔ **Progress Overview** — Visual dashboard for completed, remaining & overdue tasks  
-✔ **LocalStorage Persistence** — Task data stays saved even after reload  
-✔ **Export JSON** — Backup all data with one click  
-✔ **Modern UI** — Clean, responsive design with dark theme
+---
 
+## 🌐 Live Demo
+
+- **Frontend (Vercel)**  
+  🔗 https://smart-study-planner-eph5.vercel.app  
+
+- **Backend (Render)**  
+  🔗 https://smartstudyplanner-2xpp.onrender.com  
+
+---
+
+## ✨ Key Features
+
+### 🔐 Authentication & Security
+- User **Signup & Login**
+- **JWT Access Token + Refresh Token** authentication
+- **Remember Me** functionality
+- Secure **HttpOnly refresh token cookies**
+- Automatic token refresh (no forced logout)
+- **Protected routes** for authenticated users only
+
+### ✅ Task Management
+- Create, update, and delete tasks
+- Task attributes:
+  - Title
+  - Due date
+  - Priority (Low / Medium / High)
+  - Tags
+- Mark tasks as **completed / pending**
+- Automatic **overdue task detection**
+
+### 📊 Productivity & Insights
+- Progress overview:
+  - Completed
+  - Remaining
+  - Overdue
+- Filter tasks by **status & tags**
+- Sort tasks by **priority, due date, or title**
+- Real-time UI updates
+
+### 🔔 Notifications
+- Overdue task notifications
+- Notification dropdown with unread count
+
+### 🎨 UI / UX
+- Clean and modern UI
+- Fully responsive design
+- Dark mode support
+- Smooth user experience
+
+---
 
 ## 🛠️ Tech Stack
 
-| Technology | Use |
-|-----------|-----|
-| React | UI Components |
-| Vite | Fast development environment |
-| Tailwind CSS | Styling |
-| TypeScript | Type safety |
-| LocalStorage | Client-side persistence |
+### Frontend
+- **React + TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- React Router
+- Context API
+- React Hot Toast
 
+### Backend
+- **Node.js**
+- **Express.js**
+- **MongoDB + Mongoose**
+- **JWT (Access & Refresh Tokens)**
+- bcryptjs (password hashing)
+- cookie-parser
+- CORS
+
+### Deployment
+- **Frontend**: Vercel  
+- **Backend**: Render  
+- **Database**: MongoDB Atlas  
+
+---
 
 ## 📂 Project Structure
+
 ```
 SmartStudyPlanner/
-├── public/
-├── src/
+├── server/ # Backend (Node + Express)
+│ ├── config/
+│ ├── controllers/
+│ ├── middleware/
+│ ├── models/
+│ ├── routes/
+│ ├── index.js
+│ ├── package.json
+│ └── .env
+│
+├── src/ # Frontend (React + TS)
 │ ├── components/
+│ ├── context/
 │ ├── hooks/
+│ ├── pages/
 │ ├── types/
+│ ├── utils/
 │ ├── App.tsx
 │ └── main.tsx
+│
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
-└── vite.config.ts
+├── vite.config.ts
+└── README.md
+
 ```
 
 ## ▶️ Run Locally
@@ -48,46 +124,66 @@ SmartStudyPlanner/
 git clone https://github.com/DebuggerO1/SmartStudyPlanner.git
 cd SmartStudyPlanner
 ```
-2️⃣ Install dependencies
+### 2️⃣ Backend Setup
 ```bash
+cd server
 npm install
+npm start
 ```   
-
-3️⃣ Start the development server
+### 3️⃣ Frontend Setup
 ```bash
+cd ..
+npm install
 npm run dev
 ```
+Frontend will run at:
+    http://localhost:5173
 
-Then open the URL shown in your terminal
-👉 Example: http://localhost:5173/
+## 🔄 Authentication Flow 
 
-📦 Build for Production
-```bash
-npm run build
-```
-This creates a dist/ folder that can be deployed to Vercel, Netlify, or other static hosting services.
+- User logs in → receives short-lived access token
 
+- Refresh token stored securely in HttpOnly cookie
 
-🌐 Live Demo
+- If access token expires:
 
-🔗 https://smart-study-planner-lilac.vercel.app/
+    - Backend issues a new access token automatically
 
+    - UI does not break or logout unexpectedly
 
-## 🧠 Motivation
+- Logout clears refresh token & client state
 
-I built SmartStudyPlanner to improve productivity in my daily learning routine while practicing real-world **web development concepts**, such as:
+## 🧠 What This Project Demonstrates
 
-- React component architecture  
-- State management & hooks  
-- LocalStorage integration  
-- UI/UX design approach  
-- Deployment workflow
+- Full-stack architecture
 
-📜 License
+- Secure authentication practices
+
+- Token lifecycle handling
+
+- Clean code structure
+
+- Real production-level deployment workflow
+
+- Debugging & error handling
+
+- Scalable frontend architecture
+
+## 🎯 Suitable For
+
+- Software Engineering Internships
+
+- Full-Stack / Frontend roles
+
+- Resume & Portfolio Projects
+
+- College Project Submission
+
+## 📜 License
 
 This project is open-source under the MIT License.
 
-👤 Author
+## 👤 Author
 
 Shiva Sharma
 🔗 GitHub: https://github.com/DebuggerO1
